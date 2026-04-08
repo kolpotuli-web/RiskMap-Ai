@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RiskMap AI | Intelligent Disaster Response</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <section id="auth-screen" class="screen active">
+        <div class="auth-bg"></div>
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo-badge">RISKMAP AI</div>
+                <h2>Welcome Back</h2>
+                <p id="auth-subtitle">Enter your mobile number to continue securely.</p>
+            </div>
+
+            <div id="step-phone" class="auth-step active">
+                <div class="input-group">
+                    <span class="country-code">+91</span>
+                    <input type="tel" id="phone-input" placeholder="00000 00000" maxlength="10" autocomplete="off">
+                </div>
+                <button class="btn-primary" onclick="sendOTP()">Send Secure OTP</button>
+            </div>
+
+            <div id="step-otp" class="auth-step hidden">
+                <div class="otp-container">
+                    <input type="text" class="otp-box" maxlength="1" onkeyup="moveToNext(this, 'otp-2')">
+                    <input type="text" id="otp-2" class="otp-box" maxlength="1" onkeyup="moveToNext(this, 'otp-3')">
+                    <input type="text" id="otp-3" class="otp-box" maxlength="1" onkeyup="moveToNext(this, 'otp-4')">
+                    <input type="text" id="otp-4" class="otp-box" maxlength="1" onkeyup="verifyOTP()">
+                </div>
+                <button class="btn-primary" onclick="verifyOTP()" id="verify-btn">Verify & Login</button>
+                <button class="btn-text" onclick="resetAuth()">Change Number</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="app-screen" class="screen hidden">
+        <header class="top-bar">
+            <div class="alert-ticker">
+                <div class="ticker-content" id="alert-banner">
+                     SYSTEM ONLINE. FETCHING NDMA SENSOR DATA...
+                </div>
+            </div>
+        </header>
+
+        <div id="map"></div>
+
+        <div class="fab-container">
+            <button class="fab-btn" onclick="toggleModal('report-modal')" title="Report Incident">
+                <i data-lucide="megaphone"></i>
+            </button>
+            <button class="fab-btn ai-btn" onclick="toggleModal('ai-modal')" title="AI Survival Assistant">
+                <i data-lucide="bot"></i>
+            </button>
+        </div>
+
+        <div id="bottom-sheet" class="bottom-sheet collapsed">
+            <div class="handle-area" onclick="toggleBottomSheet()">
+                <div class="handle"></div>
+            </div>
+            
+            <div class="sheet-content">
+                <div class="risk-status">
+                    <h3>Zone Status: <span id="risk-level" class="level-low">Safe</span></h3>
+                    <p>No immediate threats detected in your 5km radius.</p>
+                </div>
+
+                <div class="quick-actions">
+                    <button class="action-card" onclick="findSafeRoute()">
+                        <div class="icon-circle green"><i data-lucide="navigation"></i></div>
+                        <span>Safe Route</span>
+                    </button>
+                    <button class="action-card" onclick="markSafe()">
+                        <div class="icon-circle blue"><i data-lucide="user-check"></i></div>
+                        <span>I'm Safe</span>
+                    </button>
+                </div>
+
+                <div class="sos-section">
+                    <button class="sos-btn-large" id="main-sos-btn" onclick="triggerSOS()">
+                        <div class="pulse-ring"></div>
+                        <span>SOS</span>
+                    </button>
+                    <p class="sos-hint">Tap to trigger emergency protocols</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="ai-modal" class="modal hidden">
+            <div class="modal-content glass">
+                <div class="modal-header">
+                    <h3><i data-lucide="sparkles"></i> AI Assistant</h3>
+                    <button onclick="toggleModal('ai-modal')" class="close-btn"><i data-lucide="x"></i></button>
+                </div>
+                <div id="chat-box" class="chat-body">
+                    <div class="msg bot">System online. I am your survival AI. Ask me about escape routes, first aid, or current disaster protocols.</div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="ai-input" placeholder="Type your situation..." onkeypress="handleAIEnter(event)">
+                    <button onclick="askAI()"><i data-lucide="send"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div id="report-modal" class="modal hidden">
+            <div class="modal-content glass">
+                <div class="modal-header">
+                    <h3>Community Report</h3>
+                    <button onclick="toggleModal('report-modal')" class="close-btn"><i data-lucide="x"></i></button>
+                </div>
+                <div class="modal-body">
+                    <label>Incident Type</label>
+                    <select id="report-type" class="custom-select">
+                        <option value="flood"> Flash Flood</option>
+                        <option value="fire"> Wildfire / Building Fire</option>
+                        <option value="earthquake">Structural Collapse</option>
+                        <option value="medical"> Medical Emergency</option>
+                    </select>
+                    <label>Details</label>
+                    <textarea id="report-desc" placeholder="Briefly describe the situation..." rows="3"></textarea>
+                    <button class="btn-primary full-width" onclick="submitReport()">Submit Live Report</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
