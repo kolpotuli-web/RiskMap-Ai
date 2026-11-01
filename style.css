@@ -228,6 +228,11 @@ textarea { resize: vertical; }
     .modal-content { width: 100%; max-height: 88vh; padding: 22px 18px; border-left: 0; border-right: 0; }
     .chat-body { height: 34vh; }
 }
+@media (max-width: 950px) {
+    .bottom-sheet .handle-area { display: flex; justify-content: center; width: 100%; min-height: 25px; padding: 9px; border: 0; background: #f7f8f6; }
+    .bottom-sheet .handle { display: block; width: 42px; height: 4px; border-radius: 4px; background: #9aa8ad; }
+    .bottom-sheet.collapsed .sheet-content { display: none; }
+}
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
