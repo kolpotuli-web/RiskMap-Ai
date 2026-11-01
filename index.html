@@ -2,134 +2,200 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RiskMap AI | Intelligent Disaster Response</title>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#173b57">
+    <meta name="description" content="Public safety and disaster response dashboard prototype.">
+    <title>Disaster Response &amp; Public Safety</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css">
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <a class="skip-link" href="#map">Skip to map</a>
 
-    <section id="auth-screen" class="screen active">
-        <div class="auth-bg"></div>
-        <div class="auth-card">
-            <div class="auth-header">
-                <div class="logo-badge">RISKMAP AI</div>
-                <h2>Welcome Back</h2>
-                <p id="auth-subtitle">Enter your mobile number to continue securely.</p>
+    <section id="auth-screen" class="screen active" aria-labelledby="auth-title">
+        <div class="auth-shell">
+            <div class="institutional-strip">
+                <span class="tricolour-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span>PUBLIC SAFETY · DISASTER RESPONSE</span>
             </div>
+            <div class="auth-card">
+                <div class="emblem-placeholder" aria-hidden="true"><i data-lucide="shield-check"></i></div>
+                <p class="eyebrow">CITIZEN ACCESS</p>
+                <h1 id="auth-title">Disaster Response Portal</h1>
+                <p class="auth-intro">Access local safety information, review nearby alerts and explore emergency response tools.</p>
 
-            <div id="step-phone" class="auth-step active">
-                <div class="input-group">
-                    <span class="country-code">+91</span>
-                    <input type="tel" id="phone-input" placeholder="00000 00000" maxlength="10" autocomplete="off">
+                <div id="step-phone" class="auth-step active">
+                    <label for="phone-input">Mobile number</label>
+                    <div class="input-group">
+                        <span class="country-code">+91</span>
+                        <input type="tel" id="phone-input" placeholder="00000 00000" maxlength="10" inputmode="numeric" autocomplete="tel-national" aria-describedby="phone-help">
+                    </div>
+                    <p id="phone-help" class="field-help">Enter a 10-digit Indian mobile number.</p>
+                    <button class="btn-primary" onclick="sendOTP()">Continue <i data-lucide="arrow-right"></i></button>
                 </div>
-                <button class="btn-primary" onclick="sendOTP()">Send Secure OTP</button>
-            </div>
 
-            <div id="step-otp" class="auth-step hidden">
-                <div class="otp-container">
-                    <input type="text" class="otp-box" maxlength="1" onkeyup="moveToNext(this, 'otp-2')">
-                    <input type="text" id="otp-2" class="otp-box" maxlength="1" onkeyup="moveToNext(this, 'otp-3')">
-                    <input type="text" id="otp-3" class="otp-box" maxlength="1" onkeyup="moveToNext(this, 'otp-4')">
-                    <input type="text" id="otp-4" class="otp-box" maxlength="1" onkeyup="verifyOTP()">
+                <div id="step-otp" class="auth-step hidden">
+                    <label>Enter verification code</label>
+                    <div class="otp-container">
+                        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" aria-label="OTP digit 1" onkeyup="moveToNext(this, 'otp-2')">
+                        <input type="text" id="otp-2" class="otp-box" maxlength="1" inputmode="numeric" aria-label="OTP digit 2" onkeyup="moveToNext(this, 'otp-3')">
+                        <input type="text" id="otp-3" class="otp-box" maxlength="1" inputmode="numeric" aria-label="OTP digit 3" onkeyup="moveToNext(this, 'otp-4')">
+                        <input type="text" id="otp-4" class="otp-box" maxlength="1" inputmode="numeric" aria-label="OTP digit 4" onkeyup="verifyOTP()">
+                    </div>
+                    <p id="auth-subtitle" class="field-help">Enter the four-digit code to continue.</p>
+                    <button class="btn-primary" onclick="verifyOTP()" id="verify-btn">Verify &amp; continue</button>
+                    <button class="btn-text" onclick="resetAuth()">Change mobile number</button>
                 </div>
-                <button class="btn-primary" onclick="verifyOTP()" id="verify-btn">Verify & Login</button>
-                <button class="btn-text" onclick="resetAuth()">Change Number</button>
+                <div class="prototype-note"><i data-lucide="info"></i><span>Demonstration interface. Sign-in and emergency actions are simulated.</span></div>
             </div>
+            <p class="auth-footnote">Designed for public information and emergency-readiness demonstrations.</p>
         </div>
     </section>
 
-    <section id="app-screen" class="screen hidden">
-        <header class="top-bar">
-            <div class="alert-ticker">
-                <div class="ticker-content" id="alert-banner">
-                     SYSTEM ONLINE. FETCHING NDMA SENSOR DATA...
+    <section id="app-screen" class="screen hidden" aria-label="Disaster response dashboard">
+        <header class="site-header">
+            <div class="masthead">
+                <div class="brand-lockup">
+                    <span class="brand-symbol" aria-hidden="true"><i data-lucide="shield-check"></i></span>
+                    <div>
+                        <p class="eyebrow">PUBLIC SAFETY &amp; RESILIENCE</p>
+                        <h1>Disaster Response Portal</h1>
+                    </div>
                 </div>
+                <div class="header-meta">
+                    <span class="demo-chip"><span class="status-dot"></span> DEMONSTRATION MODE</span>
+                    <span class="header-date" id="header-date">Emergency information dashboard</span>
+                </div>
+            </div>
+            <nav class="main-nav" aria-label="Main navigation">
+                <a href="#map" class="nav-link active"><i data-lucide="map"></i> Situation map</a>
+                <button class="nav-link" onclick="toggleModal('report-modal')"><i data-lucide="file-plus-2"></i> Report an incident</button>
+                <button class="nav-link" onclick="toggleModal('ai-modal')"><i data-lucide="book-open-check"></i> Safety guidance</button>
+            </nav>
+            <div class="alert-ticker" role="status">
+                <span class="alert-label"><i data-lucide="radio-tower"></i> SITUATION UPDATE</span>
+                <div class="ticker-window"><div class="ticker-content" id="alert-banner">DEMONSTRATION MODE · Loading simulated local situation updates…</div></div>
             </div>
         </header>
 
-        <div id="map"></div>
+        <main class="dashboard">
+            <section class="map-section" aria-label="Situation map">
+                <div class="map-heading">
+                    <div>
+                        <p class="eyebrow">LIVE VIEW · SIMULATED DATA</p>
+                        <h2>Local situation map</h2>
+                    </div>
+                    <div class="map-heading-actions">
+                        <span class="map-status"><span class="status-dot"></span> Map available</span>
+                        <button class="icon-button" type="button" onclick="if(map) map.invalidateSize()" title="Refresh map layout" aria-label="Refresh map layout"><i data-lucide="refresh-cw"></i></button>
+                    </div>
+                </div>
+                <div class="map-frame">
+                    <div id="map" aria-label="Interactive map showing simulated user location, hazard area and destination"></div>
+                    <div class="map-legend">
+                        <span><i class="legend-dot legend-user"></i>Your location</span>
+                        <span><i class="legend-dot legend-hazard"></i>Simulated hazard</span>
+                        <span><i class="legend-dot legend-safe"></i>Suggested safe zone</span>
+                    </div>
+                </div>
+                <div class="map-footnote"><i data-lucide="info"></i> Map markers and incident zones are illustrative prototype data, not verified emergency information.</div>
+            </section>
 
-        <div class="fab-container">
-            <button class="fab-btn" onclick="toggleModal('report-modal')" title="Report Incident">
-                <i data-lucide="megaphone"></i>
-            </button>
-            <button class="fab-btn ai-btn" onclick="toggleModal('ai-modal')" title="AI Survival Assistant">
-                <i data-lucide="bot"></i>
-            </button>
+            <aside id="bottom-sheet" class="bottom-sheet" aria-label="Response actions">
+                <button class="handle-area" onclick="toggleBottomSheet()" aria-label="Collapse or expand response panel"><span class="handle"></span></button>
+                <div class="sheet-content">
+                    <div class="panel-title-row">
+                        <div><p class="eyebrow">AREA OVERVIEW</p><h2>Response status</h2></div>
+                        <span class="status-pill status-watch"><span class="status-dot"></span> Monitoring</span>
+                    </div>
+                    <div class="risk-card">
+                        <div class="risk-card-top"><span class="risk-icon"><i data-lucide="activity"></i></span><span class="eyebrow">CURRENT ZONE STATUS</span></div>
+                        <div class="risk-line"><h3 id="risk-level" class="level-low">Safe</h3><span class="risk-tag">Simulated</span></div>
+                        <p>No immediate threats detected in the demonstration area. Situation indicators may change during the simulation.</p>
+                    </div>
+
+                    <div class="section-divider"></div>
+                    <p class="section-label">QUICK RESPONSE</p>
+                    <div class="quick-actions">
+                        <button class="action-card" onclick="findSafeRoute()">
+                            <span class="action-icon green"><i data-lucide="route"></i></span>
+                            <span><strong>Find a route</strong><small>To suggested safe zone</small></span>
+                            <i data-lucide="chevron-right" class="action-chevron"></i>
+                        </button>
+                        <button class="action-card" onclick="markSafe()">
+                            <span class="action-icon blue"><i data-lucide="user-check"></i></span>
+                            <span><strong>I'm safe</strong><small>Update safety status</small></span>
+                            <i data-lucide="chevron-right" class="action-chevron"></i>
+                        </button>
+                        <button class="action-card" onclick="toggleModal('report-modal')">
+                            <span class="action-icon amber"><i data-lucide="map-pinned"></i></span>
+                            <span><strong>Report incident</strong><small>Share local observations</small></span>
+                            <i data-lucide="chevron-right" class="action-chevron"></i>
+                        </button>
+                        <button class="action-card" onclick="toggleModal('ai-modal')">
+                            <span class="action-icon slate"><i data-lucide="notebook-text"></i></span>
+                            <span><strong>Safety guidance</strong><small>Review response steps</small></span>
+                            <i data-lucide="chevron-right" class="action-chevron"></i>
+                        </button>
+                    </div>
+
+                    <div class="sos-panel">
+                        <div class="sos-copy"><strong>Emergency assistance</strong><p>Use this simulated action to preview an SOS workflow.</p></div>
+                        <button class="sos-btn-large" id="main-sos-btn" onclick="triggerSOS()"><span>SOS</span><i data-lucide="arrow-up-right"></i></button>
+                    </div>
+                    <p class="panel-disclaimer"><i data-lucide="shield-alert"></i> This prototype does not contact emergency services.</p>
+                </div>
+            </aside>
+        </main>
+
+        <footer class="site-footer">
+            <span>Public Safety &amp; Disaster Response · Prototype interface</span>
+            <span>For actual emergencies, contact the appropriate local emergency service.</span>
+        </footer>
+
+        <div class="floating-actions">
+            <button class="fab-btn" onclick="toggleModal('report-modal')" title="Report incident" aria-label="Report incident"><i data-lucide="megaphone"></i></button>
+            <button class="fab-btn ai-btn" onclick="toggleModal('ai-modal')" title="Safety guidance" aria-label="Open safety guidance"><i data-lucide="message-circle"></i></button>
         </div>
 
-        <div id="bottom-sheet" class="bottom-sheet collapsed">
-            <div class="handle-area" onclick="toggleBottomSheet()">
-                <div class="handle"></div>
-            </div>
-            
-            <div class="sheet-content">
-                <div class="risk-status">
-                    <h3>Zone Status: <span id="risk-level" class="level-low">Safe</span></h3>
-                    <p>No immediate threats detected in your 5km radius.</p>
-                </div>
-
-                <div class="quick-actions">
-                    <button class="action-card" onclick="findSafeRoute()">
-                        <div class="icon-circle green"><i data-lucide="navigation"></i></div>
-                        <span>Safe Route</span>
-                    </button>
-                    <button class="action-card" onclick="markSafe()">
-                        <div class="icon-circle blue"><i data-lucide="user-check"></i></div>
-                        <span>I'm Safe</span>
-                    </button>
-                </div>
-
-                <div class="sos-section">
-                    <button class="sos-btn-large" id="main-sos-btn" onclick="triggerSOS()">
-                        <div class="pulse-ring"></div>
-                        <span>SOS</span>
-                    </button>
-                    <p class="sos-hint">Tap to trigger emergency protocols</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="ai-modal" class="modal hidden">
-            <div class="modal-content glass">
+        <div id="ai-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="ai-title">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h3><i data-lucide="sparkles"></i> AI Assistant</h3>
-                    <button onclick="toggleModal('ai-modal')" class="close-btn"><i data-lucide="x"></i></button>
+                    <div><p class="eyebrow">EMERGENCY READINESS</p><h3 id="ai-title"><i data-lucide="book-open-check"></i> Safety guidance assistant</h3></div>
+                    <button onclick="toggleModal('ai-modal')" class="close-btn" aria-label="Close"><i data-lucide="x"></i></button>
                 </div>
                 <div id="chat-box" class="chat-body">
-                    <div class="msg bot">System online. I am your survival AI. Ask me about escape routes, first aid, or current disaster protocols.</div>
+                    <div class="msg bot">Welcome. Ask about general preparedness, first aid basics or steps to consider during a hazard. This is a simulated guidance assistant.</div>
                 </div>
                 <div class="chat-input">
-                    <input type="text" id="ai-input" placeholder="Type your situation..." onkeypress="handleAIEnter(event)">
-                    <button onclick="askAI()"><i data-lucide="send"></i></button>
+                    <input type="text" id="ai-input" placeholder="Describe your situation…" onkeypress="handleAIEnter(event)" aria-label="Ask for safety guidance">
+                    <button onclick="askAI()" aria-label="Send message"><i data-lucide="send"></i></button>
                 </div>
+                <p class="modal-disclaimer">In a real emergency, follow verified local authority instructions.</p>
             </div>
         </div>
 
-        <div id="report-modal" class="modal hidden">
-            <div class="modal-content glass">
+        <div id="report-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="report-title">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Community Report</h3>
-                    <button onclick="toggleModal('report-modal')" class="close-btn"><i data-lucide="x"></i></button>
+                    <div><p class="eyebrow">COMMUNITY INPUT</p><h3 id="report-title">Report an incident</h3></div>
+                    <button onclick="toggleModal('report-modal')" class="close-btn" aria-label="Close"><i data-lucide="x"></i></button>
                 </div>
                 <div class="modal-body">
-                    <label>Incident Type</label>
+                    <label for="report-type">Incident type</label>
                     <select id="report-type" class="custom-select">
-                        <option value="flood"> Flash Flood</option>
-                        <option value="fire"> Wildfire / Building Fire</option>
-                        <option value="earthquake">Structural Collapse</option>
-                        <option value="medical"> Medical Emergency</option>
+                        <option value="flood">Flash flood</option>
+                        <option value="fire">Wildfire / building fire</option>
+                        <option value="earthquake">Structural collapse</option>
+                        <option value="medical">Medical emergency</option>
                     </select>
-                    <label>Details</label>
-                    <textarea id="report-desc" placeholder="Briefly describe the situation..." rows="3"></textarea>
-                    <button class="btn-primary full-width" onclick="submitReport()">Submit Live Report</button>
+                    <label for="report-desc">What did you observe?</label>
+                    <textarea id="report-desc" placeholder="Describe the location and situation…" rows="4"></textarea>
+                    <p class="field-help">Prototype reports may be stored only if the connected demonstration service is configured.</p>
+                    <button class="btn-primary full-width" onclick="submitReport()">Submit report <i data-lucide="arrow-right"></i></button>
                 </div>
             </div>
         </div>
@@ -137,9 +203,15 @@
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
     <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.lucide) lucide.createIcons();
+            var date = document.getElementById('header-date');
+            if (date) date.textContent = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date());
+        });
+    </script>
 </body>
 </html>
