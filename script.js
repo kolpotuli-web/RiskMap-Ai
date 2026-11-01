@@ -134,11 +134,18 @@ let routingControl = null;
 function initMap() {
     map = L.map('map', { zoomControl: false }).setView([20.5937, 78.9629], 5);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: 'Map data &copy; OpenStreetMap contributors'
+    // Public OpenStreetMap tiles: no API key required.
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        minZoom: 3,
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>'
     }).addTo(map);
 
-    map.invalidateSize();
+    // The dashboard is revealed after sign-in; refresh dimensions after it becomes visible.
+    requestAnimationFrame(() => {
+        map.invalidateSize();
+        setTimeout(() => map && map.invalidateSize(), 300);
+    });
 
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
