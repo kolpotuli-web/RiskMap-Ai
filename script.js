@@ -161,8 +161,8 @@ function initMap() {
 
     map = L.map('map', { zoomControl: false }).setView([20.5937, 78.9629], 5);
 
-    // Public OpenStreetMap tiles: no API key required.
-    const mapTiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    // Humanitarian OpenStreetMap tiles: no API key required; use a distinct provider URL to avoid stale Carto tiles.
+    const mapTiles = L.tileLayer('https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         minZoom: 3,
         maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>'
