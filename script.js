@@ -131,15 +131,49 @@ let map, userMarker, safeHospitalMarker;
 let dangerZones = [];
 let routingControl = null;
 
+function showMapFallback() {
+    const mapElement = document.getElementById('map');
+    if (!mapElement || mapElement.dataset.fallbackShown === 'true') return;
+
+    mapElement.dataset.fallbackShown = 'true';
+    mapElement.innerHTML = '';
+    mapElement.style.position = 'relative';
+    mapElement.style.minHeight = '350px';
+
+    const fallback = document.createElement('iframe');
+    fallback.title = 'OpenStreetMap interactive map';
+    fallback.src = 'https://www.openstreetmap.org/export/embed.html?bbox=72.7%2C18.8%2C73.0%2C19.3&layer=mapnik&marker=19.0760%2C72.8777';
+    fallback.style.cssText = 'display:block;width:100%;height:100%;min-height:350px;border:0;position:absolute;inset:0;';
+    fallback.loading = 'eager';
+    fallback.referrerPolicy = 'strict-origin-when-cross-origin';
+    mapElement.appendChild(fallback);
+}
+
 function initMap() {
+    const mapElement = document.getElementById('map');
+    if (!mapElement) return;
+
+    // If Leaflet fails to load, show a real OpenStreetMap embed instead of an API-key error.
+    if (typeof L === 'undefined') {
+        showMapFallback();
+        return;
+    }
+
     map = L.map('map', { zoomControl: false }).setView([20.5937, 78.9629], 5);
 
     // Public OpenStreetMap tiles: no API key required.
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const mapTiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         minZoom: 3,
         maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>'
     }).addTo(map);
+
+    // Fall back to an embedded OpenStreetMap if the tile service rejects the requests.
+    let tileErrors = 0;
+    mapTiles.on('tileerror', () => {
+        tileErrors += 1;
+        if (tileErrors >= 3) showMapFallback();
+    });
 
     // The dashboard is revealed after sign-in; refresh dimensions after it becomes visible.
     requestAnimationFrame(() => {
@@ -150,7 +184,7 @@ function initMap() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (pos) => { setUserLocation(pos.coords.latitude, pos.coords.longitude); },
-            (err) => { setUserLocation(19.0760, 72.8777); } // Fallback to Mumbai
+            () => { setUserLocation(19.0760, 72.8777); } // Fallback to Mumbai
         );
     } else {
         setUserLocation(19.0760, 72.8777);
